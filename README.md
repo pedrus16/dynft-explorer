@@ -1,4 +1,4 @@
-# Dynamic NFT Explorer (quartz-explorer)
+# Dynamic NFT Explorer (dynft-explorer)
 
 Explorer for Dynamic NFTs like Ubisoft Quartz ones stored on the aleph.im network
 
