@@ -33,7 +33,7 @@ import { posts } from "aleph-js";
 import { useRoute } from 'vue-router'
 
 export default defineComponent({
-  name: 'PageIndex',
+  name: 'PagePublisher',
   async setup () {
     const $store = useStore()
     const route = useRoute()
