@@ -30,6 +30,7 @@ export default store(function (/* { ssrContext } */) {
           logo: "publishers/LogoQuartz-v-white-beta.png",
           menu_logo: "publishers/LogoQuartz-h-white-color-beta.png",
           background: "publishers/UbisoftQuartz-background.jpg",
+          sticker: "publishers/quartz-sticker.png",
           archetype_posttype: "quartz_archetype"
         }
       }
