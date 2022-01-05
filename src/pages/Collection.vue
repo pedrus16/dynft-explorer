@@ -2,23 +2,23 @@
   <q-page class="row items-top">
     <div class="col-12 col-md-8" style="min-height: 400px">
       <div id="wrapper-video">
-        <video id="meadow" autoplay muted loop>
-            <source :src="archetype.content.videoRoot.replace('ipfs://','https://ipfs.aleph.im/ipfs/') + '/250.mp4'" />
+        <video id="meadow" autoplay muted loop :key="item_id">
+            <source :src="archetype.content.videoRoot.replace('ipfs://','https://ipfs.aleph.im/ipfs/') + '/' + item_id + '.mp4'" />
         </video>
       </div>
       <img :src="publisher.menu_logo" :alt="publisher.name" class="q-my-xl" height="50" />
       <q-select
-        filled
-        :model-value="model"
+        :model-value="item_id"
         use-input
         hide-selected
         fill-input
         input-debounce="0"
         :options="options"
         @filter="filterFn"
-        @input-value="setModel"
+        @input-value="setItem"
         hint="See a particular item"
         style="width: 250px; padding-bottom: 32px"
+        standout
       >
         <template v-slot:no-option>
           <q-item>
@@ -28,18 +28,14 @@
           </q-item>
         </template>
       </q-select>
-      <!-- <q-media-player
-        type="video"
-        :source="archetype.content.videoRoot.replace('ipfs://','https://ipfs.aleph.im/ipfs/') + '/0.mp4'"
-        :poster="archetype.content.image.replace('ipfs://','https://ipfs.aleph.im/ipfs/')"
-      /> -->
     </div>
     <div class="col-12 col-md-4 self-end">
       <q-card class="q-mt-xl">
         <!-- <img :src="archetype.content.image.replace('ipfs://','https://ipfs.aleph.im/ipfs/')" class="bg-black"/> -->
         <q-card-section>
           <div class="text-h6">{{archetype.content.name}}</div>
-          <div class="text-subtitle2">up to {{archetype.content.maxInstances}} items</div>
+          <div class="text-subtitle2" v-if="item_id == '0'">up to {{archetype.content.maxInstances}} items</div>
+          <div class="text-subtitle2" v-else>item {{item_id}} out of {{archetype.content.maxInstances}}</div>
 
         <img :src="publisher.sticker" 
           class="absolute"
@@ -58,25 +54,32 @@
 </template>
 
 <script>
-import { computed } from 'vue'
+import { computed , watch } from 'vue'
 import { ref } from 'vue'
 import { useStore } from 'vuex'
 import { defineComponent } from 'vue';
 import { posts, aggregates } from "aleph-js";
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 export default defineComponent({
   name: 'PageCollection',
   computed: {
 
   },
-  async setup () {
+  props: [
+    'publisher_id',
+    'collection_id',
+    'item_id'
+  ],
+  async setup (props) {
     const $store = useStore()
     const route = useRoute()
-    let publisher = $store.state.publishers[route.params.publisher_id]
+    const router = useRouter()
+    console.log(props)
+    let publisher = $store.state.publishers[props.publisher_id]
     let archetype_info = await aggregates.fetch_one(
         publisher.addresses[0],
-        `archetype:${route.params.collection_id}`
+        `archetype:${props.collection_id}`
     )
     let archetype = await posts.get_posts(publisher.archetype_posttype, {
       addresses: publisher.addresses,
@@ -87,15 +90,24 @@ export default defineComponent({
     else
       archetype = null
 
+    const item_id = ref(props.item_id)
+
+    if (props.item_id === undefined)
+      item_id.value = '0'
+
 
     const items = Array.from({ length: archetype.content.maxInstances - 0 + 1 }, (_, i) => i)
     const options = ref(items)
 
+    watch(() => props.item_id, (val) => {
+      item_id.value = val
+    })
     
     return {
       state: $store.state,
       publisher_id: route.params.publisher_id,
       collection_id: route.params.collection_id,
+      item_id: item_id,
       publisher: publisher,
       archetype_info: archetype_info,
       archetype: archetype,
@@ -107,6 +119,17 @@ export default defineComponent({
           options.value = items.filter(v => String(v).indexOf(needle) > -1)
         })
       },
+
+      setItem(val) {
+        router.push({
+          name: 'collection-item',
+          params: {
+            publisher_id: route.params.publisher_id,
+            collection_id: route.params.collection_id,
+            item_id: val
+          }
+        })
+      }
     }
   }
 })

@@ -13,7 +13,14 @@ const routes = [
       {
         path: ':publisher_id/:collection_id',
         component: () => import('pages/Collection.vue'),
-        name: 'collection'
+        name: 'collection',
+        props: true
+      },
+      {
+        path: ':publisher_id/:collection_id/:item_id',
+        component: () => import('pages/Collection.vue'),
+        name: 'collection-item',
+        props: true
       }
     ]
   },
