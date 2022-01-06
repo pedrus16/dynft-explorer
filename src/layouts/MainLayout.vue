@@ -33,7 +33,7 @@
         <span>Loading!</span>
       </template>
     </q-page-container>
-    <q-footer class="bg-transparent">
+    <q-footer class="bg-transparent" style="z-index: 100" v-if="$q.screen.lt.md">
       <q-toolbar>
         <template v-if="$q.screen.lt.md">
           <q-space />

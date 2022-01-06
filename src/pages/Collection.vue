@@ -49,6 +49,32 @@
           {{archetype.content.description}}
         </q-card-section>
       </q-card>
+      <div v-if="history.length">
+        <h6 class="q-ma-sm">Owners history</h6>
+        <q-card>
+          <q-list>
+            <q-item v-for="item of history" :key="item.txHash">
+              
+              <q-item-section>
+                <q-item-label>{{item.toName}}</q-item-label>
+                <q-item-label caption lines="2">
+                  <a :href="`https://tzstats.com/${item.to}`" class="text-white">
+                  {{item.to}}
+                  </a>
+                </q-item-label>
+              </q-item-section>
+
+              <q-item-section side top>
+                <q-item-label caption>
+                  <a :href="`https://tzstats.com/${item.txHash}`" class="text-white">
+                  {{ moment(item.date*1000).fromNow() }} 
+                  </a>
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-card>
+      </div>
     </div>
   </q-page>
 </template>
@@ -57,9 +83,11 @@
 import { computed , watch } from 'vue'
 import { ref } from 'vue'
 import { useStore } from 'vuex'
-import { defineComponent } from 'vue';
-import { posts, aggregates } from "aleph-js";
+import { defineComponent } from 'vue'
+import { posts, aggregates } from "aleph-js"
 import { useRoute, useRouter } from 'vue-router'
+import { get_serialized_id, get_profile_name } from '../utils/quartz'
+import moment from "moment"
 
 export default defineComponent({
   name: 'PageCollection',
@@ -91,6 +119,7 @@ export default defineComponent({
       archetype = null
 
     const item_id = ref(props.item_id)
+    const history = ref([])
 
     if (props.item_id === undefined)
       item_id.value = '0'
@@ -99,19 +128,44 @@ export default defineComponent({
     const items = Array.from({ length: archetype.content.maxInstances - 0 + 1 }, (_, i) => i)
     const options = ref(items)
 
+    const update_history = async (item_id) => {
+      if (Number(item_id) === 0) {
+        history.value = []
+      } else {
+        try {
+          const serialized_id = get_serialized_id(props.collection_id, item_id)
+          let value = await aggregates.fetch_one(
+            publisher.addresses[0],
+            `history:${serialized_id}`
+          )
+          let transfers = value['transfers']
+          for (let item of transfers) {
+            item.toName = await get_profile_name(publisher.addresses[0], item.to)
+          }
+          history.value = transfers
+        } catch {
+          history.value = []
+        }
+      }
+    }
+    update_history(item_id.value)
+
     watch(() => props.item_id, (val) => {
       item_id.value = val
+      update_history(val)
     })
     
     return {
       state: $store.state,
       publisher_id: route.params.publisher_id,
       collection_id: route.params.collection_id,
-      item_id: item_id,
-      publisher: publisher,
-      archetype_info: archetype_info,
-      archetype: archetype,
-      options: options,
+      item_id,
+      publisher,
+      archetype_info,
+      archetype,
+      options,
+      history,
+      moment,
 
       filterFn (val, update, abort) {
         update(() => {
