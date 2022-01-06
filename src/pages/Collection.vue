@@ -128,12 +128,13 @@ export default defineComponent({
     const items = Array.from({ length: archetype.content.maxInstances - 0 + 1 }, (_, i) => i)
     const options = ref(items)
 
-    const update_history = async (item_id) => {
-      if (Number(item_id) === 0) {
+    const update_history = async (it_id) => {
+      item_id.value = it_id
+      if (Number(it_id) === 0) {
         history.value = []
       } else {
         try {
-          const serialized_id = get_serialized_id(props.collection_id, item_id)
+          const serialized_id = get_serialized_id(props.collection_id, it_id)
           let value = await aggregates.fetch_one(
             publisher.addresses[0],
             `history:${serialized_id}`
@@ -151,8 +152,8 @@ export default defineComponent({
     update_history(item_id.value)
 
     watch(() => props.item_id, (val) => {
-      item_id.value = val
-      update_history(val)
+      if (item_id.value !== val)
+        update_history(val)
     })
     
     return {
@@ -183,6 +184,7 @@ export default defineComponent({
             item_id: val
           }
         })
+        update_history(val)
       }
     }
   }

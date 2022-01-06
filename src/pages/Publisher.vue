@@ -9,7 +9,9 @@
             collection_id: apost.content.archetype_id
           }}">
           <q-card class="bg-white text-black">
-            <img :src="apost.content.image.replace('ipfs://','https://ipfs.aleph.im/ipfs/')" class="bg-black"/>
+            <img :src="apost.content.image.replace('ipfs://','https://ipfs.aleph.im/ipfs/')"
+                 class="bg-black"
+                 style="border-top-left-radius: 13px; border-top-right-radius: 13px;" />
             <q-card-section>
               <div class="text-h6">{{apost.content.name}}</div>
               <div class="text-subtitle2">up to {{apost.content.maxInstances}} items</div>
